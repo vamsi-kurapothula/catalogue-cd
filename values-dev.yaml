@@ -8,3 +8,6 @@ hpa:
   minReplicas: 2
   maxReplicas: 5
   cpuUtilization: 70
+configMap:
+  MONGO_URL: "mongodb://mongodb:27017/catalogue"
+
