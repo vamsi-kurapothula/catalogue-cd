@@ -37,26 +37,27 @@ pipeline {
                 }
             }
         }
-        stage ('check status') {
+          stage('Check Status'){
             steps{
                 script{
                     withAWS(credentials: 'aws-creds', region: 'us-east-1') {
-                        def deploymentstatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT  || echo failed").trim()
-                        if (deploymentstatus.contains("successfully rolled out")) {
-                            echo "deployment is success"
+                        def deploymentStatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo FAILED").trim()
+                        if (deploymentStatus.contains("successfully rolled out")) {
+                            echo "Deployment is success"
                         } else {
                             sh """
                                 helm rollback $COMPONENT -n $PROJECT
                                 sleep 20
                             """
-                            def rollbackstatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo failed").trim()
-                            if (deploymentstatus.contains("successfully rolled out")) {
-                                error  ("deployment is failure, rollback is success")
+                            def rollbackStatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo FAILED").trim()
+                            if (rollbackStatus.contains("successfully rolled out")) {
+                                error "Deployment is Failure, Rollback Success"
                             }
-                            else {
-                                echo "deployment is failure, rollback is failure.Application is not running"
+                            else{
+                                error "Deployment is Failure, Rollback Failure. Application is not running"
                             }
                         }
+
                     }
                 }
             }
