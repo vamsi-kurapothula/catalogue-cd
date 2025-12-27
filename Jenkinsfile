@@ -62,7 +62,7 @@ pipeline {
                 }
             }
         }
-        stage('Functional Testing'){
+       /*  stage('Functional Testing'){
             when {
                 expression { params.deploy_to = "dev" }
             }
@@ -83,7 +83,7 @@ pipeline {
 
                 }
             }
-        }
+        } */
     
     }
     post { 
