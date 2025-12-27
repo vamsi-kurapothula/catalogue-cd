@@ -1,6 +1,4 @@
-statefulset:
+deployment:
   imageURL: 784585544641.dkr.ecr.us-east-1.amazonaws.com/roboshop/catalogue
   imageVersion: IMAGE_VERSION
-hpa:
-  maxReplicas: 10
-  utilisation: 75
+  replicas: 2
