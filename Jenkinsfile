@@ -37,7 +37,7 @@ pipeline {
                 }
             }
         }
-       /*  stage ('check status') {
+        stage ('check status') {
             steps{
                 script{
                     withAWS(credentials: 'aws-creds', region: 'us-east-1') {
@@ -83,7 +83,7 @@ pipeline {
                 }
             }
         }
-    } */
+    }
     }
     post { 
         always { 
