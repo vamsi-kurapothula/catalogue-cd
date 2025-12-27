@@ -1,86 +1,101 @@
 pipeline {
-    agent {
+   agent {
         node {
             label 'AGENT-1'
         }
     }
-
     environment {
-        REGION    = "us-east-1"
-        ACC_ID    = "784585544641"
-        PROJECT   = "roboshop"
+        appVersion = ''
+        REGION = "us-east-1"
+        ACC_ID = "784585544641"
+        PROJECT = "roboshop"
         COMPONENT = "catalogue"
-    }
 
+    }
     options {
         timeout(time: 30, unit: 'MINUTES') 
         disableConcurrentBuilds()
     } 
-
     parameters {
-        string(
-            name: 'appVersion',
-            description: 'Docker image version passed from CI'
-        ) 
-        choice(
-            name: 'deploy_to',
-            choices: ['dev', 'qa', 'prod'],
-            description: 'Pick the environment'
-        )
+        string(name: 'appVersion',  description: 'image version of the application') 
+        choice(name: 'deploy_to', choices: ['dev', 'qa', 'prod'], description: 'Pick the environment')
     } 
-
+// build
     stages {
-
-        stage('Deploy') {
+        stage('deploy') {
             steps {
                 script {
-                    echo "Deploying image version: ${params.appVersion} to environment: ${params.deploy_to}"
-
-                    withAWS(credentials: 'aws-creds', region: REGION) {
-                        sh """
-                            aws eks update-kubeconfig --region=${REGION} --name=${PROJECT}-${params.deploy_to}
-                            kubectl set image deployment/${COMPONENT} ${COMPONENT}=${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${params.appVersion} -n ${PROJECT}
-                            kubectl rollout status deployment/${COMPONENT} -n ${PROJECT} --timeout=120s
-                        """
+                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                         sh """  
+                             aws eks update-kubeconfig --region $REGION --name "$PROJECT-${params.deploy_to}" 
+                             kubectl get nodes
+                             kubectl apply -f 01-namespace.yaml
+                             sed -i "s/IMAGE_VERSION/${params.appVersion}/g" values-${params.deploy_to}.yaml
+                             helm upgrade --install $COMPONENT -f values-${params.deploy_to}.yaml -n $PROJECT .
+                       """
                     }
                 }
             }
         }
-
-        stage('Functional Testing') {
-            when {
-                expression { params.deploy_to == "dev" }
-            }
-            steps {
-                script {
-                    echo "Run functional test cases on DEV environment"
+       /*  stage ('check status') {
+            steps{
+                script{
+                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                        def deploymentstatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT  || echo failed").trim()
+                        if (deploymentstatus.contains("successfully rolled out")) {
+                            echo "deployment is success"
+                        } else {
+                            sh """
+                                helm rollback $COMPONENT -n $PROJECT
+                                sleep 20
+                            """
+                            def rollbackstatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo failed").trim()
+                            if (deploymentstatus.contains("successfully rolled out")) {
+                                error  ("deployment is failure, rollback is success")
+                            }
+                            else {
+                                echo "deployment is failure, rollback is failure.Application is not running"
+                            }
+                        }
+                    }
                 }
             }
         }
-
-        stage('Integration Testing') {
+        stage('Functional Testing'){
             when {
-                expression { params.deploy_to == "dev" }
+                expression { params.deploy_to = "dev" }
             }
-            steps {
-                script {
-                    echo "Run integration test cases on DEV environment"
+            steps{
+                script{
+                    echo "Run functional test cases"
+
                 }
             }
         }
+         stage('Integration Testing'){
+            when {
+                expression { params.deploy_to = "dev" }
+            }
+            steps{
+                script{
+                    echo "Run integrational test cases"
 
-    } 
-
+                }
+            }
+        }
+    } */
+    }
     post { 
         always { 
-            echo 'CD pipeline finished'
+            echo 'I will always say Hello again!'
         }
         success {
-            echo "Deployment of version ${params.appVersion} succeeded"
+            echo 'hi this is success'
             deleteDir()
         }
         failure {
-            echo "Deployment of version ${params.appVersion} failed"
+            echo 'hi, this is failure'
         }
     }
 }
+    
