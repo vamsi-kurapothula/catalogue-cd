@@ -1,13 +1,8 @@
-deployment:
+deployment: 
   imageURL: 784585544641.dkr.ecr.us-east-1.amazonaws.com/roboshop/catalogue
   imageVersion: IMAGE_VERSION
-  replicas: 2
-
 hpa:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 5
-  cpuUtilization: 70
+  maxReplicas: 10
+  utilisation: 75
 configMap:
-  MONGO_URL: "mongodb://mongodb:27017/catalogue"
-
+ MONGO_URL: "mongodb://mongodb:27017/catalogue"
